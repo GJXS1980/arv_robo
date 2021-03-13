@@ -5,11 +5,11 @@ Function: 主函数，ROS初始化
 ***************************************/
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "STM32_CONTROL_NODE");
-  ROS_INFO("STM32_CONTROL_NODE has turned on ");
-  turn_on_robot Robot_Control; //实例化一个对象
-  Robot_Control.Control();  //循环执行数据采集和发布topic等操作
-  return 0;
+	ros::init(argc, argv, "STM32_CONTROL_NODE");
+	ROS_INFO("STM32_CONTROL_NODE has turned on ");
+	turn_on_robot Robot_Control; //实例化一个对象
+	Robot_Control.Control();  //循环执行数据采集和发布topic等操作
+	return 0;
 } 
 
 /**************************************
@@ -91,23 +91,24 @@ Function: 串口通讯校验函数，数据包除最后一个字节，其他的�
 ***************************************/
 unsigned char turn_on_robot::Check_Sum(unsigned char Count_Number,unsigned char mode)
 {
-  unsigned char check_sum=0,k;
-  
-  if(mode==0) //接收数据
-  {
-   for(k=0;k<Count_Number;k++)//Count_Number是接收数组位数减1
-    {
-     check_sum=check_sum^Receive_Data.rx[k];//按位异或
-     }
-  }
-  if(mode==1) //发送数据
-  {
-   for(k=0;k<Count_Number;k++)//Count_Number是发送数组位数减1
-    {
-     check_sum=check_sum^Send_Data.tx[k];//按位异或
-     }
-  }
-  return check_sum;//返回结果
+	unsigned char check_sum=0,k;
+	
+	if(mode==0) //接收数据
+	{
+		for(k=0;k<Count_Number;k++)//Count_Number是接收数组位数减1
+		{
+			check_sum=check_sum^Receive_Data.rx[k];//按位异或
+		}
+	}
+	
+	if(mode==1) //发送数据
+	{
+		for(k=0;k<Count_Number;k++)//Count_Number是发送数组位数减1
+		{
+			check_sum=check_sum^Send_Data.tx[k];//按位异或
+		}
+	}
+	return check_sum;//返回结果
 }
 
 void turn_on_robot::CountTurns(float *newdata, float *olddata)
@@ -154,9 +155,9 @@ Function: 从串口读取数据
 ***************************************/
 bool turn_on_robot::Get_Sensor_Data()
 { 
-   short Header_Pos=0,Tail_Pos=21;  						
-   uint8_t Receive_Data_Pr[RECEIVE_DATA_SIZE]={0};	
-   Stm32_Serial->Data_Read(Receive_Data_Pr,sizeof (Receive_Data_Pr));//读串口数据
+	short Header_Pos=0,Tail_Pos=21;  						
+	uint8_t Receive_Data_Pr[RECEIVE_DATA_SIZE]={0};	
+	Stm32_Serial->Data_Read(Receive_Data_Pr,sizeof (Receive_Data_Pr));//读串口数据
    
     if((Receive_Data_Pr[Header_Pos]==FRAME_HEADER)&&(Receive_Data_Pr[Tail_Pos]==FRAME_TAIL))  
     {  
@@ -175,61 +176,55 @@ bool turn_on_robot::Get_Sensor_Data()
 	//Stm32_Serial.SetlnBufferCount(0);
      	return false;
    } 	
-	
-  //printf("vbat:%02x \n",Receive_Data.rx[18]);
-  Receive_Data.Frame_Header= Receive_Data.rx[0]; //数据的第一位是帧头（固定值）
-  Receive_Data.Frame_Tail= Receive_Data.rx[21];  //数据的最后一位是帧尾（数据校验位）
-
- if (Receive_Data.Frame_Header == FRAME_HEADER )//判断帧头
-  {
-    if (Receive_Data.Frame_Tail == FRAME_TAIL) //判断帧尾
-    { 
-      if (Receive_Data.rx[20] == Check_Sum(20,READ_DATA_CHECK))//校验位检测
-      { 
-	 mpu_trans(&Receive_Data.rx[1],4);
-	 Receive_Data.Ultrasonic_DATA[0]=Receive_Data.rx[6]<<8|Receive_Data.rx[7];
-	 Receive_Data.Ultrasonic_DATA[1]=Receive_Data.rx[8]<<8|Receive_Data.rx[9];
-	 Receive_Data.Ultrasonic_DATA[2]=Receive_Data.rx[10]<<8|Receive_Data.rx[11];
-	 Receive_Data.Ultrasonic_DATA[2]+=(float)Receive_Data.rx[12]/100;
-
-	 Receive_Data.Temperature_DATA[0]= Receive_Data.rx[13];
-	 Receive_Data.Temperature_DATA[0]+=(float)Receive_Data.rx[14]/100;
-	 Receive_Data.Temperature_DATA[1]= Receive_Data.rx[15];
-	 Receive_Data.Temperature_DATA[1]+=(float)Receive_Data.rx[16]/100;		
-	
-	 Receive_Data.Power_voltage[0] = Receive_Data.rx[17];//充电状态
-	 Receive_Data.Power_voltage[1] = Receive_Data.rx[18];//获取电池电压
-		   
-	 Receive_Data.Collision_State = Receive_Data.rx[19];
-        
-        return true;
-     }
-    }
-  } 
- return false;
+   
+   //printf("vbat:%02x \n",Receive_Data.rx[18]);
+   Receive_Data.Frame_Header= Receive_Data.rx[0]; //数据的第一位是帧头（固定值）
+   Receive_Data.Frame_Tail= Receive_Data.rx[21];  //数据的最后一位是帧尾（数据校验位）
+   
+   if (Receive_Data.Frame_Header == FRAME_HEADER )//判断帧头
+   {
+	   if (Receive_Data.Frame_Tail == FRAME_TAIL) //判断帧尾
+	   { 
+		   if (Receive_Data.rx[20] == Check_Sum(20,READ_DATA_CHECK))//校验位检测
+		   { 
+			   mpu_trans(&Receive_Data.rx[1],4);
+			   Receive_Data.Ultrasonic_DATA[0]=Receive_Data.rx[6]<<8|Receive_Data.rx[7];
+			   Receive_Data.Ultrasonic_DATA[1]=Receive_Data.rx[8]<<8|Receive_Data.rx[9];
+			   Receive_Data.Ultrasonic_DATA[2]=Receive_Data.rx[10]<<8|Receive_Data.rx[11];
+			   Receive_Data.Ultrasonic_DATA[2]+=(float)Receive_Data.rx[12]/100;
+			   Receive_Data.Temperature_DATA[0]= Receive_Data.rx[13];
+			   Receive_Data.Temperature_DATA[0]+=(float)Receive_Data.rx[14]/100;
+			   Receive_Data.Temperature_DATA[1]= Receive_Data.rx[15];
+			   Receive_Data.Temperature_DATA[1]+=(float)Receive_Data.rx[16]/100;		
+			   Receive_Data.Power_voltage[0] = Receive_Data.rx[17];//充电状态
+			   Receive_Data.Power_voltage[1] = Receive_Data.rx[18];//获取电池电压
+			   Receive_Data.Collision_State = Receive_Data.rx[19];
+			   return true;
+			}
+		}
+	} 
+	return false;
 }
 /**************************************
 Function: 这是相关控制代码，代码循环执行
 ***************************************/
 void turn_on_robot::Control()
 {
-  _Last_Time = ros::Time::now();
-
-  std::thread t1(&turn_on_robot::thr_fun1,this);
-  ros::Rate loop_rate(20);
-  while(ros::ok())
-  {
-    _Now = ros::Time::now();
-    Sampling_Time = (_Now - _Last_Time).toSec();	
-    if (true == Get_Sensor_Data())  //从串口读取下位机法过来的全部数据
-    {
-     	Publish_SensorData(); //发布
-    }
-	
-    usleep(10);	
-    _Last_Time = _Now;//记录时间
-    loop_rate.sleep();
-    ros::spinOnce();//循环等待回调函数
+	_Last_Time = ros::Time::now();
+	std::thread t1(&turn_on_robot::thr_fun1,this);
+	ros::Rate loop_rate(20);
+	while(ros::ok())
+	{
+		_Now = ros::Time::now();
+		Sampling_Time = (_Now - _Last_Time).toSec();	
+		if (true == Get_Sensor_Data())  //从串口读取下位机法过来的全部数据
+		{
+			Publish_SensorData(); //发布
+		}
+		usleep(10);	
+		_Last_Time = _Now;//记录时间
+		loop_rate.sleep();
+		ros::spinOnce();//循环等待回调函数
     }
 }
 
@@ -243,7 +238,7 @@ void turn_on_robot::thr_fun1(void)
  	std_msgs::Float32MultiArray error_msgs; 
 	uint8_t error_buff[6]={0};	  
 	while(1)
-	{	
+	{
 		mMutex.lock();
 		Send_Data.tx[0]= FRAME_HEADER;
 		Send_Data.tx[7]= FRAME_TAIL;
@@ -264,26 +259,21 @@ void turn_on_robot::thr_fun1(void)
 		//printf("\n");
 		if ((error_buff[0] == FRAME_HEADER)&&(error_buff[5]== FRAME_TAIL))//判断帧头 帧尾
   		{
-		     error_msgs.data.clear();			
-		
-		     for(i=0;i<4;i++)
-		     {
-			check = check^error_buff[i];
-		     }	
-    		     if (error_buff[4]==check) //CRC 
-    		     { 	
+			error_msgs.data.clear();			
+			for(i=0;i<4;i++)
+			{
+				check = check^error_buff[i];
+			}
 			
-			error_msgs.data.push_back(error_buff[1]);
-			error_msgs.data.push_back(error_buff[2]);
-			error_msgs.data.push_back(error_buff[3]);
-					
-			error_publisher.publish(error_msgs);
-		     }
-			
+			if (error_buff[4]==check) //CRC 
+			{
+				error_msgs.data.push_back(error_buff[1]);
+				error_msgs.data.push_back(error_buff[2]);
+				error_msgs.data.push_back(error_buff[3]);
+				error_publisher.publish(error_msgs);
+			}	
 		}
-		
 		mMutex.unlock();
-		
 		sleep(2);
  	}
 
@@ -294,27 +284,26 @@ Function: 构造函数
 ***************************************/
 turn_on_robot::turn_on_robot():Sampling_Time(0),turns(0)
 {
-  memset(&Receive_Data, 0, sizeof(Receive_Data)); 
-  memset(&Send_Data, 0, sizeof(Send_Data));
-  memset(&Mpu9250_Data, 0, sizeof(Mpu9250_Data));
-  ros::NodeHandle private_nh("~");
-
-  private_nh.param<std::string>("usart_port_name", usart_port_name, "/dev/ttyUSB0"); //固定串口
-  private_nh.param<int>("serial_baud_rate", serial_baud_rate, 115200); //和下位机底层波特率115200 
-  voltage_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Power_Msg", 100);	//电池电压数据发布
-  collision_publisher 	= n.advertise<std_msgs::Int32>("Collision_State", 100);			
-  ultrasonic_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Ultrasonic_DATA", 1000);
-  temperature_publisher = n.advertise<std_msgs::Float32MultiArray>("/Temperature_DATA", 1000);
-  mpu9250_publisher  	= n.advertise<std_msgs::Float32>("/MPU_DATA", 1000);
-  error_publisher	= n.advertise<std_msgs::Float32MultiArray>("/STM32_ERROR_CODE", 100);
-  Enable_Sensor_Sub = n.subscribe("/STM32_ENBLAE_Topic", 1000, &turn_on_robot::STM32OrderCallback,this);	
-  Cmd_Sensor_Sub = n.subscribe("/STM32_CMD_Topic", 1000, &turn_on_robot::SendDataCallback,this);	
-  
-  Stm32_Serial = new ARV_USART((char*)usart_port_name.data());
-  if(Stm32_Serial->USART_Seting(serial_baud_rate, 0, 8, 1, 'N')==false) exit(0);
-
-  ROS_INFO_STREAM("Data ready");//ready显示状态
-
+	memset(&Receive_Data, 0, sizeof(Receive_Data)); 
+	memset(&Send_Data, 0, sizeof(Send_Data));
+	memset(&Mpu9250_Data, 0, sizeof(Mpu9250_Data));
+	ros::NodeHandle private_nh("~");
+	
+	private_nh.param<std::string>("usart_port_name", usart_port_name, "/dev/ttyUSB0"); //固定串口
+	private_nh.param<int>("serial_baud_rate", serial_baud_rate, 115200); //和下位机底层波特率115200 
+	voltage_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Power_Msg", 100);	//电池电压数据发布
+	collision_publisher 	= n.advertise<std_msgs::Int32>("Collision_State", 100);			
+	ultrasonic_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Ultrasonic_DATA", 1000);
+	temperature_publisher = n.advertise<std_msgs::Float32MultiArray>("/Temperature_DATA", 1000);
+	mpu9250_publisher  	= n.advertise<std_msgs::Float32>("/MPU_DATA", 1000);
+	error_publisher	= n.advertise<std_msgs::Float32MultiArray>("/STM32_ERROR_CODE", 100);
+	Enable_Sensor_Sub = n.subscribe("/STM32_ENBLAE_Topic", 1000, &turn_on_robot::STM32OrderCallback,this);	
+	Cmd_Sensor_Sub = n.subscribe("/STM32_CMD_Topic", 1000, &turn_on_robot::SendDataCallback,this);	
+	
+	Stm32_Serial = new ARV_USART((char*)usart_port_name.data());
+	if(Stm32_Serial->USART_Seting(serial_baud_rate, 0, 8, 1, 'N')==false) exit(0);
+	
+	ROS_INFO_STREAM("Data ready");//ready显示状态
 }
 
 /**************************************
@@ -322,8 +311,8 @@ Function: 析构函数
 ***************************************/
 turn_on_robot::~turn_on_robot()
 {
-  //Stm32_Serial.close();//关闭串口
-  ROS_INFO_STREAM("Shutting down");
+	//Stm32_Serial.close();//关闭串口
+	ROS_INFO_STREAM("Shutting down");
 }
 
 

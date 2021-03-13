@@ -20,23 +20,23 @@ std::vector<float> HGarvKinematics::inverse_kinematics(float vx, float vy, float
     std::vector<float> motor_speed(m_kinematics_mode, 0);
     switch(m_kinematics_mode) {
     case 2:
-        //motor_speed[0] = -(vx - vth*m_wheel_separation/2)/m_wheel_radius*30/PI;
-        //motor_speed[1] = (vx + vth*m_wheel_separation/2)/m_wheel_radius*30/PI;
-        motor_speed[0] = (vx - vth*m_wheel_separation/2);
-        motor_speed[1] = -(vx + vth*m_wheel_separation/2);
-        break;
+            //  两轮底盘运动学求解，前进方向为X正方向，左边为Y正方向，逆时针转动为正方向
+            motor_speed[0] = (vx - vth*m_wheel_separation/2);
+            motor_speed[1] = -(vx + vth*m_wheel_separation/2);
+            break;
     case 3:
-        //ROS_INFO("do nothing on kinematics_mode=3, waiting ro update");
-        motor_speed[0] = (vx*sin(PI/3) + vy*cos(PI/3) + m_wheel_separation*vth)/m_wheel_radius*30/PI;
-        motor_speed[1] = -(vx*sin(PI/3) - vy*cos(PI/3) - m_wheel_separation*vth)/m_wheel_radius*30/PI;
-        motor_speed[2] = (-vy + m_wheel_separation*vth)/m_wheel_radius*30/PI;
-        break;
+            //ROS_INFO("do nothing on kinematics_mode=3, waiting ro update");
+            motor_speed[0] = (vx*sin(PI/3) + vy*cos(PI/3) + m_wheel_separation*vth)/m_wheel_radius*30/PI;
+            motor_speed[1] = -(vx*sin(PI/3) - vy*cos(PI/3) - m_wheel_separation*vth)/m_wheel_radius*30/PI;
+            motor_speed[2] = (-vy + m_wheel_separation*vth)/m_wheel_radius*30/PI;
+            break;
     default:
-        ROS_INFO("cannot support the kinematics");
+            ROS_INFO("cannot support the kinematics");
     }
-#if INVERS_KINEMATICS_DEBUG
-    std::cout << "kinematics motor speed: " << motor_speed << std::endl;
-#endif
+    
+    #if INVERS_KINEMATICS_DEBUG
+        std::cout << "kinematics motor speed: " << motor_speed << std::endl;
+    #endif
     //std::cout << "kinematics motor speed: " << motor_speed << std::endl;
     return motor_speed;
 }
@@ -59,9 +59,11 @@ std::vector<float> HGarvKinematics::kinematics(std::vector<float> motorspeed)
         velocity[2] = (motorspeed[0] + motorspeed[1] + motorspeed[2])*PI*m_wheel_radius/30.f/3.f/m_wheel_separation;
         break;
     }
-#if KINEMATICS_DEBUG
-    std::cout << "kinematics: "<< velocity << std::endl;
-#endif
+    
+    #if KINEMATICS_DEBUG
+        std::cout << "kinematics: "<< velocity << std::endl;
+    #endif
+
     return  velocity;
 }
 
@@ -82,11 +84,12 @@ void HGarvKinematics::vel_callback(const geometry_msgs::Twist::ConstPtr& vel)
     else {
         vth = vel->angular.z;
     }
-#if INVERS_KINEMATICS_DEBUG
-    std::cout <<"received velocity [vx vy vth] "
-              << '[' << vx << " " << vy <<" " << vth << ']'
-              << std::endl;
-#endif
+    
+    #if INVERS_KINEMATICS_DEBUG
+        std::cout <<"received velocity [vx vy vth] "
+                << '[' << vx << " " << vy <<" " << vth << ']'
+                << std::endl;
+    #endif
     m_motor_speed = inverse_kinematics(vx, 0, vth);
     //std::cout << "kinematics: "<< m_motor_speed << std::endl;
 }
@@ -129,9 +132,11 @@ void HGarvKinematics::status_pub()
 
     ros::Rate loop(10);
     while(ros::ok()) {
-#if KINEMATICS_DEBUG
-        std::cout << "kinematics vel: " << m_real_vel << std::endl;
-#endif
+
+        #if KINEMATICS_DEBUG
+            std::cout << "kinematics vel: " << m_real_vel << std::endl;
+        #endif
+
         geometry_msgs::Twist msg;
         msg.linear.x = m_real_vel[0];
         msg.linear.y = m_real_vel[1];
