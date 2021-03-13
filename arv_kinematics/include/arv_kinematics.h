@@ -23,10 +23,10 @@ const float PI = std::acos(-1);
 #define default_vth (2.5)   // 速度最大
 
 
-class BobacKinematics
+class HGarvKinematics
 {
 public:
-    BobacKinematics();
+    HGarvKinematics();
     ros::NodeHandle m_h;
     ros::NodeHandle m_ph;//private NodeHandle, for parameter set
     ros::Subscriber m_vel_sub; //subscribe topic = "cmd_vel"

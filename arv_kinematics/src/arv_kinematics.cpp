@@ -15,7 +15,7 @@ std::ostream& operator<< (std::ostream& os, std::vector<T> vec)
     return os << ']';
 }
 
-std::vector<float> BobacKinematics::inverse_kinematics(float vx, float vy, float vth)
+std::vector<float> HGarvKinematics::inverse_kinematics(float vx, float vy, float vth)
 {
     std::vector<float> motor_speed(m_kinematics_mode, 0);
     switch(m_kinematics_mode) {
@@ -42,7 +42,7 @@ std::vector<float> BobacKinematics::inverse_kinematics(float vx, float vy, float
 }
 
 //  两轮底盘正运动学求解
-std::vector<float> BobacKinematics::kinematics(std::vector<float> motorspeed)
+std::vector<float> HGarvKinematics::kinematics(std::vector<float> motorspeed)
 {
     std::vector<float> velocity(3, 0);	// vx, vy, vth
     switch(m_kinematics_mode) {
@@ -66,7 +66,7 @@ std::vector<float> BobacKinematics::kinematics(std::vector<float> motorspeed)
 }
 
 //  速度控制指令的获取及逆运动学求解
-void BobacKinematics::vel_callback(const geometry_msgs::Twist::ConstPtr& vel)
+void HGarvKinematics::vel_callback(const geometry_msgs::Twist::ConstPtr& vel)
 {
     float vx = 0, vy = 0, vth = 0;
     if (fabs(vel->linear.x) > m_max_vx) {
@@ -92,18 +92,18 @@ void BobacKinematics::vel_callback(const geometry_msgs::Twist::ConstPtr& vel)
 }
 
 //  两轮底盘正运动学求解
-void BobacKinematics::status_callback(const std_msgs::Float32MultiArray::ConstPtr& status)
+void HGarvKinematics::status_callback(const std_msgs::Float32MultiArray::ConstPtr& status)
 {
     std::vector<float> motorspeed = status->data;
     m_real_vel = kinematics(motorspeed);
 }
 
-void BobacKinematics::motor_speed_pub()
+void HGarvKinematics::motor_speed_pub()
 {
     std_msgs::Float32MultiArray msg;
     ros::Rate loop(10);
 
-    m_vel_sub = m_h.subscribe<geometry_msgs::Twist>("cmd_vel", 100, &BobacKinematics::vel_callback, this);
+    m_vel_sub = m_h.subscribe<geometry_msgs::Twist>("cmd_vel", 100, &HGarvKinematics::vel_callback, this);
     m_motor_speed_pub = m_h.advertise<std_msgs::Float32MultiArray>("/Motor_SetSpeed_TOPIC", 10);
 
     m_motor_speed = std::vector<float>(m_kinematics_mode, 0);
@@ -121,9 +121,9 @@ void BobacKinematics::motor_speed_pub()
 }
 
 //get bobac sensor information and kinematics
-void BobacKinematics::status_pub()
+void HGarvKinematics::status_pub()
 {
-    m_status_sub = m_h.subscribe<std_msgs::Float32MultiArray>("arv_sensor", 10, &BobacKinematics::status_callback, this);
+    m_status_sub = m_h.subscribe<std_msgs::Float32MultiArray>("arv_sensor", 10, &HGarvKinematics::status_callback, this);
     m_vel_pub = m_h.advertise<geometry_msgs::Twist>("real_vel", 10);
     m_real_vel = std::vector<float>(3, 0);
 
@@ -143,7 +143,7 @@ void BobacKinematics::status_pub()
 }
 
 
-BobacKinematics::BobacKinematics()
+HGarvKinematics::HGarvKinematics()
 {
     m_ph = ros::NodeHandle("~");
     //get kinematics_mode
@@ -190,7 +190,7 @@ BobacKinematics::BobacKinematics()
     } else {
         ROS_INFO("max_vth = %g", m_max_vth);
     }
-    m_ikthread = boost::thread(boost::bind(&BobacKinematics::motor_speed_pub, this));
-    m_kthread = boost::thread(boost::bind(&BobacKinematics::status_pub, this));
+    m_ikthread = boost::thread(boost::bind(&HGarvKinematics::motor_speed_pub, this));
+    m_kthread = boost::thread(boost::bind(&HGarvKinematics::status_pub, this));
 }
 

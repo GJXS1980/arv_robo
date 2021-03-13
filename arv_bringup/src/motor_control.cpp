@@ -1,4 +1,4 @@
-#include "ARV_MOTOR.h"
+#include "motor.h"
 
 #define debug     0
 
@@ -124,7 +124,7 @@ void turn_on_motor::SetSpeedCallback(const std_msgs::Float32MultiArray::ConstPtr
 	
 	// 速度符号恢复
 	if(!neg_flag[0]) set_speed.data[0] = -set_speed.data[0];
-	if(!neg_flag[1]) set_speed.data[1] = -set_speed.data[0];
+	if(!neg_flag[1]) set_speed.data[1] = -set_speed.data[1];
 
     // std::cout << "kinematics motor speed: " << set_speed << std::endl;
 

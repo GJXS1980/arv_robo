@@ -4,7 +4,7 @@
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "arv_kinematics");
-    BobacKinematics bk;
+    HGarvKinematics bk;
     ros::spin();
     return 0;
 }
