@@ -1,5 +1,6 @@
-<launch>
+<?xml version='1.0' encoding='utf-8'?>
 
+<launch>
   <node name="SENSOR_DATA_NODE" pkg="arv_bringup" type="SENSOR_DATA_NODE" output="screen" >
     <param name="usart_port_name" value="/dev/ttyUSB0" />
     <param name="serial_baud_rate" value="115200" />
@@ -11,5 +12,7 @@
   </node>
 
   <node name="arv_kinematics_node" pkg="arv_kinematics" type="arv_kinematics_node" output="screen" />
+
+  <node name="arv_odometry_node" pkg="arv_kinematics" type="arv_odometry_node" output="screen" />
 
 </launch>

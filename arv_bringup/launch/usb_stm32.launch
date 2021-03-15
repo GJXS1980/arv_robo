@@ -1,6 +1,0 @@
-<launch>
-  <node name="usb_stm32" pkg="stm32_control" type="STM32_CONTROL_NODE" output="screen" >
-    <param name="usart_port_name" value="/dev/ttyUSB0" />
-    <param name="serial_baud_rate" value="115200" />
-  </node>
-</launch>

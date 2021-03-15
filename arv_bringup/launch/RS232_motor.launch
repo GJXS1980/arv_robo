@@ -1,6 +1,0 @@
-<launch>
-  <node name="RS232_motor" pkg="motor_control" type="ARV_MOTOR_NODE" output="screen" >
-    <param name="usart_port_name" value="/dev/ttyS0" />
-    <param name="serial_baud_rate" value="115200" />
-  </node>
-</launch>

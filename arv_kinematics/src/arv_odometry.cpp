@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "odometry_publisher");
     ros::NodeHandle n;
     ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
-    ros::Subscriber cmd_sub = n.subscribe<geometry_msgs::Twist>("real_vel",10, vel_callback);
+    ros::Subscriber cmd_sub = n.subscribe<geometry_msgs::Twist>("cmd_vel",10, vel_callback);
     tf::TransformBroadcaster odom_broadcaster;
 
     current_time = ros::Time::now();
