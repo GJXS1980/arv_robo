@@ -123,7 +123,20 @@ void turn_on_robot::CountTurns(float *newdata, float *olddata)
 
 void turn_on_robot::CalYaw(float *yaw)
 {
-	*yaw = 360*(turns)+(*yaw);
+  static int semple = 30;
+  static float ori_mpu_data = 0; 
+  
+ // printf("data:%f\n",ori_mpu_data);
+  if(semple)
+   {
+	semple--;
+	ori_mpu_data += 360.0*(turns)+(*yaw);
+   }
+   else 
+   {
+	*yaw = 360.0*(turns)+(*yaw) - ori_mpu_data/30.0f;
+   }
+
 }
 
 void turn_on_robot::mpu_trans(uint8_t *rx,int len)
@@ -208,11 +221,20 @@ bool turn_on_robot::Get_Sensor_Data()
 /**************************************
 Function: 这是相关控制代码，代码循环执行
 ***************************************/
+
+void turn_on_robot::MPU_RESET(void)
+{
+	uint8_t cmd[]={0x7B,0x06,0x00,0x00,0x00,0x00,0x7D,0x7D};
+	Stm32_Serial->Data_Write(cmd,sizeof(cmd));
+}
+
 void turn_on_robot::Control()
 {
 	_Last_Time = ros::Time::now();
 	std::thread t1(&turn_on_robot::thr_fun1,this);
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(100);	
+	//MPU_RESET();
+	//sleep(2);
 	while(ros::ok())
 	{
 		_Now = ros::Time::now();
@@ -293,17 +315,17 @@ turn_on_robot::turn_on_robot():Sampling_Time(0),turns(0)
 	private_nh.param<int>("serial_baud_rate", serial_baud_rate, 115200); //和下位机底层波特率115200 
 	voltage_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Power_Msg", 100);	//电池电压数据发布
 	collision_publisher 	= n.advertise<std_msgs::Int32>("Collision_State", 100);			
-	ultrasonic_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Ultrasonic_DATA", 1000);
-	temperature_publisher = n.advertise<std_msgs::Float32MultiArray>("/Temperature_DATA", 1000);
+	ultrasonic_publisher 	= n.advertise<std_msgs::Float32MultiArray>("/Ultrasonic_DATA", 100);
+	temperature_publisher = n.advertise<std_msgs::Float32MultiArray>("/Temperature_DATA", 100);
 	mpu9250_publisher  	= n.advertise<std_msgs::Float32>("/MPU_DATA", 1000);
 	error_publisher	= n.advertise<std_msgs::Float32MultiArray>("/STM32_ERROR_CODE", 100);
-	Enable_Sensor_Sub = n.subscribe("/STM32_ENBLAE_Topic", 1000, &turn_on_robot::STM32OrderCallback,this);	
-	Cmd_Sensor_Sub = n.subscribe("/STM32_CMD_Topic", 1000, &turn_on_robot::SendDataCallback,this);	
+	Enable_Sensor_Sub = n.subscribe("/STM32_ENBLAE_Topic", 10, &turn_on_robot::STM32OrderCallback,this);	
+	Cmd_Sensor_Sub = n.subscribe("/STM32_CMD_Topic", 10, &turn_on_robot::SendDataCallback,this);	
 	
 	Stm32_Serial = new ARV_USART((char*)usart_port_name.data());
 	if(Stm32_Serial->USART_Seting(serial_baud_rate, 0, 8, 1, 'N')==false) exit(0);
 	
-	ROS_INFO_STREAM("Data ready");//ready显示状态
+	ROS_INFO_STREAM("STM32 Data ready");
 }
 
 /**************************************

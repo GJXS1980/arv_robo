@@ -86,6 +86,7 @@ class turn_on_robot
 		ARV_USART *Stm32_Serial;
 		void CalYaw(float *yaw);
 		void CountTurns(float *newdata,float *olddata);
+		void MPU_RESET(void);
 	
 	private:
 		void STM32OrderCallback(const std_msgs::Float32MultiArray::ConstPtr& msg);	
