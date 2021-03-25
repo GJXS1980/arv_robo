@@ -57,7 +57,7 @@ class turn_on_motor
 	        void motor_init(void);
 		//serial::Serial MOTOR_Serial; //声明串口对象 
 		ARV_USART *MOTOR_Serial;
-		void CountEncoder(int *NewEncoder,int *OldEncoder,int *turns);
+		void CountEncoder(int *NewEncoder,int *OldEncoder,int *turns,int motor);
 		int MotorA_turns;
 		int MotorB_turns;
 		void* Signal_Handle();

@@ -31,7 +31,7 @@ void* turn_on_motor::Signal_Handle()
 	speed_buf[10] = crc_hl[0];
 	speed_buf[11] = crc_hl[1];
 	MOTOR_Serial->Data_Write(speed_buf,sizeof(speed_buf));
-	usleep(1000*10);
+	usleep(1000*3);
 	MOTOR_Serial->USART_CLEAN();
 
 	//	电机失能
@@ -39,7 +39,7 @@ void* turn_on_motor::Signal_Handle()
 	enable_buf[10] = crc_hl[0];
 	enable_buf[11] = crc_hl[1];
 	MOTOR_Serial->Data_Write(enable_buf,sizeof (enable_buf));
-	usleep(1000*10);
+	usleep(1000*3);
 	MOTOR_Serial->USART_CLEAN();
 
 }
@@ -64,7 +64,7 @@ void turn_on_motor::MOTOR_Enable_Callback(const std_msgs::Int32::ConstPtr &enabl
 	enable_buf[11] = crc_hl[1];
 	//	printf("crc_hl[0] %02x crc_hl[1] %02x\n",crc_hl[0],crc_hl[1]);
 	MOTOR_Serial->Data_Write(enable_buf,sizeof (enable_buf));
-	usleep(1000*10);
+	usleep(1000*3);
 	MOTOR_Serial->USART_CLEAN();
 }
 
@@ -140,7 +140,7 @@ void turn_on_motor::SetSpeedCallback(const std_msgs::Float32MultiArray::ConstPtr
 	speed_buf[11] = crc_hl[1];
 	// speed_buf[11]=crc_hl[1];
 	MOTOR_Serial->Data_Write(speed_buf,12);
-	usleep(1000*10);
+	usleep(1000*3);
 	MOTOR_Serial->USART_CLEAN();	
 }
 
@@ -156,7 +156,7 @@ void turn_on_motor::Publish_Motor_ERROR()
 	unsigned char driver_read_error_cmd[8] = {0x01, 0x43, 0x50, 0x12, 0x51, 0x12, 0x48, 0x9d}; 		//读取错误码
 	memset(check_Data, 0, sizeof(check_Data));
 	MOTOR_Serial->Data_Write(driver_read_error_cmd,12);
-	usleep(1000*100);
+	usleep(1000*3);
 	MOTOR_Serial->Data_Read(check_Data,sizeof(check_Data));
 
 	ERROR.data.push_back(check_Data[7]);
@@ -176,12 +176,19 @@ unsigned char turn_on_motor::Check_Sum(uint8_t *rx,unsigned char Count_Number)
 	return check_sum;
 }
 
-void turn_on_motor::CountEncoder(int *NewEncoder,int *OldEncoder,int *turns)
+void turn_on_motor::CountEncoder(int *NewEncoder,int *OldEncoder,int *turns,int motor)
 {
-	if((*NewEncoder<100) && (*OldEncoder>5500))  //0~5599  5600
-	(*turns)++;
-	if((*NewEncoder>5500) && (*OldEncoder<100))
-	(*turns)--;
+	if(motor==1)
+	{
+		if((*NewEncoder>5000) && (*OldEncoder<500))	(*turns)++;
+		if((*NewEncoder<500) && (*OldEncoder>5000))	(*turns)--;
+    }
+    else if(motor==2)
+    {
+		if((*NewEncoder<500) && (*OldEncoder>5000))	(*turns)++;
+		if((*NewEncoder>5000) && (*OldEncoder<500))	(*turns)--;
+    }
+
 }
 
 /**************************************
@@ -197,10 +204,13 @@ void turn_on_motor::Get_MOTOR_Data()
 	unsigned char speed_cmd[8] = {0x01,0x43,0x50,0x00,0x51,0x00,0x68,0x95};
 	std_msgs::Int32MultiArray Encoder; 	
 	std_msgs::Float32MultiArray Speed; 
+	static int TempEncoder_A = 0,TempEncoder_B = 0;
+		
+	
 	
 	//１.读取两轴编码器  
 	MOTOR_Serial->Data_Write(encoder_cmd,8);
-	usleep(1000*10);
+	usleep(1000*3);
 	MOTOR_Serial->Data_Read(Receive_Data_Pr,sizeof (Receive_Data_Pr));	//读串口数据
 	CRC16CheckSum((unsigned char *)Receive_Data_Pr, 10, crc_hl);	//校验位计算
 	if((Receive_Data_Pr[10] == crc_hl[0]) && (Receive_Data_Pr[11] == crc_hl[1])) //校验成功后赋值
@@ -214,39 +224,59 @@ void turn_on_motor::Get_MOTOR_Data()
 		printf("\n");
 		#endif
 		
-		Receive_Data.Encoder_A = (Receive_Data_Pr[6] << 8|Receive_Data_Pr[7])&0xffff;
+		Receive_Data.Encoder_A = 5599 - (Receive_Data_Pr[6] << 8|Receive_Data_Pr[7])&0xffff;
 		Receive_Data.Encoder_B = (Receive_Data_Pr[8] << 8|Receive_Data_Pr[9])&0xffff;
-		
-		if(start){
-			Orin_Encoder_A = Receive_Data.Encoder_A;
-			Orin_Encoder_B = Receive_Data.Encoder_B;
+/*		
+		Encoder.data.push_back(Receive_Data.Encoder_A );
+		Encoder.data.push_back(Receive_Data.Encoder_B );	
+		Encoder_publisher.publish(Encoder);
+*/
+		//	起始编码器
+		if(start)
+		{
+			OldEncoder_A = Orin_Encoder_A = Receive_Data.Encoder_A;
+			OldEncoder_B = Orin_Encoder_B = Receive_Data.Encoder_B;
 			start = false;
 		}
-		
-		OldEncoder_A = NewEncoder_A;
-		OldEncoder_B = NewEncoder_B;
-		
+		else
+		{
+			OldEncoder_A = NewEncoder_A;
+			OldEncoder_B = NewEncoder_B;
+		}
 		NewEncoder_A = Receive_Data.Encoder_A;
 		NewEncoder_B = Receive_Data.Encoder_B;
 		
-		CountEncoder(&NewEncoder_A, &OldEncoder_A, &MotorA_turns);
-		CountEncoder(&NewEncoder_B, &OldEncoder_B, &MotorB_turns);
+		CountEncoder(&NewEncoder_A, &OldEncoder_A, &MotorA_turns,2);
+		CountEncoder(&NewEncoder_B, &OldEncoder_B, &MotorB_turns,2);
+	
+		//printf("MotorA_turns:%d\n",MotorA_turns);
+		//printf("MotorB_turns:%d\n",MotorB_turns);
+		//printf("Receive_Data.Encoder_A:%d\n",Receive_Data.Encoder_A);
+		//printf("Orin_Encoder_A:%d\n",Orin_Encoder_A);
+		//printf("==================================================\n");
+		//printf("Receive_Data.Encoder_B:%d\n",Receive_Data.Encoder_B);
+		//printf("Orin_Encoder_B:%d\n",Orin_Encoder_B);
+		//printf("==================================================\n");
+
+		Receive_Data.Encoder_A = 5599 * MotorA_turns + Receive_Data.Encoder_A - Orin_Encoder_A;		//减掉初始位置
+		Receive_Data.Encoder_B = 5599 * MotorB_turns + Receive_Data.Encoder_B - Orin_Encoder_B;
 		
-		Receive_Data.Encoder_A = 5599*MotorA_turns + Receive_Data.Encoder_A - Orin_Encoder_A;		//减掉初始位置
-		Receive_Data.Encoder_B = 5599*MotorB_turns + Receive_Data.Encoder_B - Orin_Encoder_B;
-		
-		Encoder.data.push_back(Receive_Data.Encoder_A);
+		//if(NewEncoder_A != OldEncoder_A)
+		//TempEncoder_A += Receive_Data.Encoder_A;
+	
+		//if(NewEncoder_B != OldEncoder_B)
+		//TempEncoder_B += Receive_Data.Encoder_B;
+
+		Encoder.data.push_back(Receive_Data.Encoder_A );
 		Encoder.data.push_back(Receive_Data.Encoder_B);	
 		Encoder_publisher.publish(Encoder);
-		//printf("Receive_Data.Encoder_A %d\n",Receive_Data.Encoder_A);
-		//printf("Receive_Data.Encoder_B %d\n",Receive_Data.Encoder_B);
    }
    
    memset(Receive_Data_Pr,0,sizeof(Receive_Data_Pr));
-   usleep(1000*10);
+   usleep(1000*3);
    //2.读取两轴速度环   
    MOTOR_Serial->Data_Write(speed_cmd, sizeof(speed_cmd));  
-   usleep(1000*10);
+   usleep(1000*3);
    MOTOR_Serial->Data_Read(Receive_Data_Pr, sizeof(Receive_Data_Pr));//读串口数据
    CRC16CheckSum((unsigned char *)Receive_Data_Pr, 10, crc_hl);//校验位计算   
    if((Receive_Data_Pr[10] == crc_hl[0]) && (Receive_Data_Pr[11] == crc_hl[1])) //校验成功后赋值
@@ -341,8 +371,8 @@ turn_on_motor::turn_on_motor():MotorA_turns(0), MotorB_turns(0)
 	Encoder_publisher = n.advertise<std_msgs::Int32MultiArray>("/Motor_Encoder", 1000);	//	电机编码器数值话题
 	ERROR_publisher = n.advertise<std_msgs::Int32MultiArray>("/Motor_ERROR_CODE", 1000);	//	电机错误码话题
 	
-	MOTOR_ENALBE_Sub = n.subscribe("/Motor_SetEnable_TOPIC", 1000,&turn_on_motor::MOTOR_Enable_Callback,this);	//	电机使能话题
-	MOTOR_SetSpeed_Sub  = n.subscribe("/Motor_SetSpeed_TOPIC", 1000,&turn_on_motor::SetSpeedCallback,this);	//	电机速度设置话题
+	MOTOR_ENALBE_Sub = n.subscribe("/Motor_SetEnable_TOPIC", 10,&turn_on_motor::MOTOR_Enable_Callback,this);	//	电机使能话题
+	MOTOR_SetSpeed_Sub  = n.subscribe("/Motor_SetSpeed_TOPIC", 5,&turn_on_motor::SetSpeedCallback,this);	//	电机速度设置话题
 
 	MOTOR_Serial = new ARV_USART((char*)usart_port_name.data());	//	连接端口
 	MOTOR_Serial->USART_Seting(serial_baud_rate, 0, 8, 1, 'N');	//	设置波特率

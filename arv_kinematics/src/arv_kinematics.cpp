@@ -48,10 +48,11 @@ std::vector<float> HGarvKinematics::kinematics(std::vector<float> motorspeed)
     switch(m_kinematics_mode) {
     case 2:
         // velocity[0] = (-motorspeed[0] + motorspeed[1])*PI*m_wheel_radius/60.0; //m/s motorspeed (r/min)
-        // velocity[1] = 0;
-        // velocity[2] = (motorspeed[0] + motorspeed[1])*2*PI*m_wheel_radius/m_wheel_separation/60.0;
-        velocity[0] = (-motorspeed[0] + motorspeed[1]); //m/s
-        velocity[1] = (motorspeed[0] + motorspeed[1]);
+        velocity[0] = (motorspeed[0] + motorspeed[1])/2.0; //m/s motorspeed (r/min)
+        velocity[1] = 0;
+        velocity[2] = (motorspeed[1] - motorspeed[0])/m_wheel_separation;
+        // velocity[0] = (-motorspeed[0] + motorspeed[1]); //m/s
+        // velocity[1] = (motorspeed[0] + motorspeed[1]);
         break;
     case 3:
         velocity[0] = (motorspeed[0] - motorspeed[1])*PI/30.f*m_wheel_radius/sqrt(3);
@@ -126,7 +127,7 @@ void HGarvKinematics::motor_speed_pub()
 //get bobac sensor information and kinematics
 void HGarvKinematics::status_pub()
 {
-    m_status_sub = m_h.subscribe<std_msgs::Float32MultiArray>("arv_sensor", 10, &HGarvKinematics::status_callback, this);
+    m_status_sub = m_h.subscribe<std_msgs::Float32MultiArray>("/Motor_Speed", 10, &HGarvKinematics::status_callback, this);
     m_vel_pub = m_h.advertise<geometry_msgs::Twist>("real_vel", 10);
     m_real_vel = std::vector<float>(3, 0);
 
