@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<launch>
+
+    <!--语音唤醒功能包-->
+    <node pkg = "arv_voice_system" type = "arv_awake_node" name = "arv_awake_node">
+        <!-- 有效期至2021-1-20 -->
+        <param name="lgi_param" value="appid = 604adfa0,work_dir = ." />
+    </node>
+
+    <!--打开语音识别-->
+    <node pkg = "arv_voice_system" type = "arv_asr_node" name = "arv_asr_node" output="screen">
+        <param name="appid" value="appid = 604adfa0, work_dir = ." />
+        <param name="speech_param" value="sub = iat, domain = iat, language = zh_cn, accent = mandarin, sample_rate = 16000, result_type = plain, result_encoding = utf8" />
+    </node>
+
+    <!--打开语义理解-->
+    <node pkg = "arv_voice_system" type = "arv_nlu_node" name = "arv_nlu_node" output="screen">
+        <param name="tuling_key" value="14daac8ca27b4170a46d8f0ea1d29d88" />
+        <param name="userid" value="HGcastle" />
+    </node>
+    
+    <!--打开语音合成-->
+    <node pkg = "arv_voice_system" type = "arv_tts_node" name = "arv_tts_node" output="screen">
+        <param name="appid" value="appid = 604adfa0, work_dir = ." />
+        <param name="speech_param" value="voice_name = vixy, text_encoding = utf8, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0" />
+    </node>
+
+</launch>

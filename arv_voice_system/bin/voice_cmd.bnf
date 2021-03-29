@@ -1,0 +1,12 @@
+﻿#BNF+IAT 1.0 UTF-8;
+!grammar call;
+!slot <position>;
+!start <callstart>;
+
+<callstart>:<position>;
+<position>:前进!id(7)|向前移动!id(7)|
+后退!id(8)|向后移动!id(8)|
+左转!id(9)|向左转!id(9)|
+右转!id(10)|向右转!id(10)|
+停止!id(11)|停下!id(11)|停!id(11)|急停!id(11);
+

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<launch>
+
+    <!--语音唤醒功能包-->
+    <node pkg = "arv_voice_system" type = "arv_awake_node" name = "arv_awake_node">
+        <!-- 有效期至2021-1-20 -->
+        <param name="lgi_param" value="appid = 604adfa0,work_dir = ." />
+    </node>
+    
+</launch>
