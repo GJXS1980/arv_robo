@@ -45,6 +45,6 @@
     </node>
     
   <!-- yolo 标签提取节点 -->
-  <node name="yolo_label" pkg="darknet_ros" type="arv_yolo.py" output="screen" />
+  <node name="yolo_label" pkg="arv_voice_system" type="arv_yolo.py" output="screen" />
 
 </launch>
