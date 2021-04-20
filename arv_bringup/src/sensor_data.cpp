@@ -1,4 +1,14 @@
 #include "sensor.h"
+/********************************************************
+日期：2021.3.30
+版本：V 1.0
+修改人：黄 斌
+
+更新内容:
+	1. 修改通信协议，第20、21字节为红外信息，20字节为左红外，21字节为右红外信息，信息内容：0x04接收到充电庄的右边信号，OXA0为左边的信号，0xA0为同时接收到左右信号。
+	2. 添加充电庄信息发布话题，话题为Power_Pile_DATA
+
+********************************************************/
 
 /**************************************
 Function: 主函数，ROS初始化
@@ -61,7 +71,7 @@ void turn_on_robot::Publish_SensorData()
     std_msgs::Float32MultiArray ultrasoni_msgs; 
     std_msgs::Float32MultiArray temperature_msgs; 
     std_msgs::Float32 mpu9250_msgs; 	    
-
+    std_msgs::Int32MultiArray pile_msgs; 
    
     collision_msgs.data = Receive_Data.Collision_State ;  
     collision_publisher.publish(collision_msgs);
@@ -84,6 +94,10 @@ void turn_on_robot::Publish_SensorData()
     mpu9250_msgs.data=Receive_Data.mpu_data.yaw;
     mpu9250_publisher.publish(mpu9250_msgs);
 
+    pile_msgs.data.push_back(Receive_Data.pile_data[0]);
+    pile_msgs.data.push_back(Receive_Data.pile_data[1]);
+    power_pile.publish(pile_msgs);	
+   
 
 }
 /**************************************
@@ -168,7 +182,7 @@ Function: 从串口读取数据
 ***************************************/
 bool turn_on_robot::Get_Sensor_Data()
 { 
-	short Header_Pos=0,Tail_Pos=21;  						
+	short Header_Pos=0,Tail_Pos=RECEIVE_DATA_SIZE-1;  						
 	uint8_t Receive_Data_Pr[RECEIVE_DATA_SIZE]={0};	
 	Stm32_Serial->Data_Read(Receive_Data_Pr,sizeof (Receive_Data_Pr));//读串口数据
    
@@ -192,13 +206,13 @@ bool turn_on_robot::Get_Sensor_Data()
    
    //printf("vbat:%02x \n",Receive_Data.rx[18]);
    Receive_Data.Frame_Header= Receive_Data.rx[0]; //数据的第一位是帧头（固定值）
-   Receive_Data.Frame_Tail= Receive_Data.rx[21];  //数据的最后一位是帧尾（数据校验位）
+   Receive_Data.Frame_Tail= Receive_Data.rx[RECEIVE_DATA_SIZE-1];  //数据的最后一位是帧尾（数据校验位）
    
    if (Receive_Data.Frame_Header == FRAME_HEADER )//判断帧头
    {
 	   if (Receive_Data.Frame_Tail == FRAME_TAIL) //判断帧尾
 	   { 
-		   if (Receive_Data.rx[20] == Check_Sum(20,READ_DATA_CHECK))//校验位检测
+		   if (Receive_Data.rx[22] == Check_Sum(RECEIVE_DATA_SIZE-2,READ_DATA_CHECK))//校验位检测
 		   { 
 			   mpu_trans(&Receive_Data.rx[1],4);
 			   Receive_Data.Ultrasonic_DATA[0]=Receive_Data.rx[6]<<8|Receive_Data.rx[7];
@@ -212,6 +226,8 @@ bool turn_on_robot::Get_Sensor_Data()
 			   Receive_Data.Power_voltage[0] = Receive_Data.rx[17];//充电状态
 			   Receive_Data.Power_voltage[1] = Receive_Data.rx[18];//获取电池电压
 			   Receive_Data.Collision_State = Receive_Data.rx[19];
+			   Receive_Data.pile_data[0]	=  Receive_Data.rx[20];
+			   Receive_Data.pile_data[1]	=  Receive_Data.rx[21];
 			   return true;
 			}
 		}
@@ -321,7 +337,8 @@ turn_on_robot::turn_on_robot():Sampling_Time(0),turns(0)
 	error_publisher	= n.advertise<std_msgs::Float32MultiArray>("/STM32_ERROR_CODE", 100);
 	Enable_Sensor_Sub = n.subscribe("/STM32_ENBLAE_Topic", 10, &turn_on_robot::STM32OrderCallback,this);	
 	Cmd_Sensor_Sub = n.subscribe("/STM32_CMD_Topic", 10, &turn_on_robot::SendDataCallback,this);	
-	
+	power_pile     = n.advertise<std_msgs::Int32MultiArray>("/Power_Pile_DATA", 100);
+
 	Stm32_Serial = new ARV_USART((char*)usart_port_name.data());
 	if(Stm32_Serial->USART_Seting(serial_baud_rate, 0, 8, 1, 'N')==false) exit(0);
 	

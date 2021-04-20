@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find usb_cam)/launch/usb_cam-test.launch"/>		
+  <node name="zbar_opencv_node" pkg="zbar_opencv" type="zbar_opencv_node" output="screen"/>
+</launch>
