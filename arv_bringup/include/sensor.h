@@ -32,7 +32,7 @@ using namespace std;
 #define READ_DATA_CHECK   0     	//标志位，接收端做校验位
 #define FRAME_HEADER      0X7B  	//帧头，和下位机一致
 #define FRAME_TAIL  	  0X7D 		//帧尾
-#define RECEIVE_DATA_SIZE		22//下位机发过来的数据的长度
+#define RECEIVE_DATA_SIZE		24//下位机发过来的数据的长度
 #define SEND_DATA_SIZE			8//ROS发给下位机的数据的长度
 #define PI 				3.1415926f//圆周率
 #define EMPTY1 			0X00
@@ -65,6 +65,7 @@ typedef struct _RECEIVE_DATA_
 	float Power_voltage[2];		//电源电压
 	float Ultrasonic_DATA[3];		
 	float Temperature_DATA[2];
+	int pile_data[2];
 	short Collision_State;
 	unsigned char Frame_Tail;	//1个字节  帧尾 校验位
 
@@ -105,8 +106,8 @@ class turn_on_robot
 		boost::mutex mMutex;
 		short turns;
 	
-		ros::Subscriber Cmd_Sensor_Sub,Enable_Sensor_Sub;//初始化2个订阅者
-		ros::Publisher voltage_publisher, collision_publisher, ultrasonic_publisher,temperature_publisher,mpu9250_publisher,error_publisher;//初始化6个发布者
+		ros::Subscriber Cmd_Sensor_Sub,Enable_Sensor_Sub;
+		ros::Publisher voltage_publisher, collision_publisher, ultrasonic_publisher,temperature_publisher,mpu9250_publisher,error_publisher,power_pile;
 		RECEIVE_DATA Receive_Data;  //接收结构体   Receive_Data    
         SEND_DATA Send_Data;  //发送结构体  Send_Data
         MPU9250_DATA Mpu9250_Data;
