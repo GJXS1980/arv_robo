@@ -241,7 +241,7 @@ void AsrCallBack(const std_msgs::Int32::ConstPtr& msg)
 {
 	if (msg->data == 1)
 	{
-		const char* start = "好好的";
+		const char* start = "我看看";
 		make_text_to_wav(start, fileName);
 		playWav();
 	}

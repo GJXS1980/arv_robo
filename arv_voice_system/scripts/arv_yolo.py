@@ -4,7 +4,7 @@
 import rospy
 from darknet_ros_msgs.msg import BoundingBoxes
 from std_msgs.msg import String, Int32
-from translate import Translator
+# from translate import Translator
 
 chinese = ["人","自行车","汽车","摩托车","飞机","公共汽车","火车","卡车","船","交通灯","消防栓","停车标志","停车计时器",
 "长凳","鸟","猫","狗","马","羊","奶牛","大象","熊","斑马","长颈鹿","背包","雨伞","手提包","领带","手提箱","飞盘","滑雪",
@@ -16,7 +16,7 @@ class YOLO_LABEL():
     def __init__(self):
         self.result = None
         self.yolo_data = None
-        self.translator= Translator(to_lang="chinese")
+        # self.translator= Translator(to_lang="chinese")
         self.asr_data = 0
         #   初始化ROS节点
         rospy.init_node('yolo_label')
